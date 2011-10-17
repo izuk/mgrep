@@ -1,0 +1,16 @@
+Name:                mgrep
+Version:             0.1
+Synopsis:            Search for lines in a file that contain any of a list of substrings
+-- Description:         
+License:             BSD3
+License-file:        LICENSE
+Author:              Itai Zukerman
+Maintainer:          zukerman@math-hat.com
+Copyright:           (c) 2011 Itai Zukerman
+Category:            Util
+Build-type:          Simple
+Cabal-version:       >=1.2
+Executable mgrep
+  Main-is:             mgrep.hs
+  Build-depends:       base >= 4, bytestring, cmdargs, containers
+  Other-modules:       Paths_mgrep
