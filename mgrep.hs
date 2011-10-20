@@ -3,10 +3,7 @@
 import qualified Data.ByteString.Lazy as B
 import Data.List (tails)
 import Data.Text.AhoCorasick
-import Data.Version (showVersion)
 import System.Console.CmdArgs
-
-import Paths_mgrep
 
 data MGrep = MGrep { invert :: Bool
                    , afterContext :: Int
