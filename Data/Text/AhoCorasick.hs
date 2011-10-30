@@ -1,9 +1,16 @@
+-- | An implementation of the Aho-Corasick algorithm for searching a
+-- string to see if it contains any of a collections of substrings.
+--
+-- The algorithm was first described here:
+--   Aho, Alfred V.; Margaret J. Corasick
+--   "Efficient string matching: An aid to bibliographic search"
+--   Communications of the ACM 18 (6): 333–340
+--   (June 1975)
+
 module Data.Text.AhoCorasick (
   compile,
   search
   ) where
-
---import Test.QuickCheck
 
 import Data.Function (on)
 import Data.List (groupBy, sort)
@@ -16,15 +23,13 @@ type Children a = M.IntMap a
 
 data Trie = Root (Children Trie)
           | Node Bool (Children Trie) Trie
-            
-instance Show Trie where
-  show (Root m) = "Root " ++ show (M.keysSet m)
-  show (Node t m _) = "Node " ++ show t ++ " " ++ show (M.keysSet m)
 
 goto :: Trie -> Word8 -> Maybe Trie
 goto (Root m) ch = M.lookup (fromIntegral ch) m
 goto (Node _ m _) ch = M.lookup (fromIntegral ch) m
 
+-- | Turn a set of patterns into a data structure that can be used for
+-- efficient substring search.
 compile :: [B.ByteString] -> Trie
 compile patterns = if any B.null patterns
                    then error "no null patterns"
@@ -48,6 +53,9 @@ buildNode parentFailure (ch, xs) = Node (any B.null xs) (expand failure xs) fail
         Root _ -> n
         Node _ _ failure' -> backtrack failure'
 
+-- | Given a compiled set of patterns, check if a substring contains
+-- any of the patterns.
+search :: Trie -> B.ByteString -> Bool
 search r s = search' r 0
   where
     size = B.length s
@@ -57,7 +65,7 @@ search r s = search' r 0
         loop (Root _) = False
         loop (Node True _ _) = True
         loop (Node _ _ failure) = loop failure
-    search' r@(Root _) idx = 
+    search' r@(Root _) idx =
       case goto r (s `B.index` idx) of
         Just n -> search' n (idx + 1)
         Nothing -> search' r (idx + 1)
@@ -66,26 +74,19 @@ search r s = search' r 0
         Just n -> search' n (idx + 1)
         Nothing -> search' failure idx
 
--- Utils
-        
-orElse :: Maybe a -> a -> a        
+orElse :: Maybe a -> a -> a
 orElse = flip fromMaybe
 
+-- | Extract the prefixes and remainders from a sorted list of
+-- strings.  For example:
+--
+--   partition ["abc", "apple", "toast"] = 
+--     [('a', ["bc", "pple"])
+--     ,('t', ["oast"])
+--     ]
 partition :: [B.ByteString] -> [(Word8, [B.ByteString])]
 partition xs = splits
   where
     fulls = filter (not . B.null) xs
     firsts = groupBy ((==) `on` B.head) fulls
     splits = map (\ys -> (B.head $ head ys, map B.tail ys)) firsts
-
--- QuickCheck
-
-{-
-instance Arbitrary B.ByteString where
-  arbitrary = sized $ \n ->
-    fmap B.pack $ sequence [arbitrary | _ <- [1..n]]
-
-prop_find pre post xs = all ((> 0) . B.length) xs ==>
-                          let t = compile xs
-                          in and [search t (B.concat [pre, x, post]) | x <- xs]
--}

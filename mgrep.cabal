@@ -13,4 +13,3 @@ Cabal-version:       >=1.2
 Executable mgrep
   Main-is:             mgrep.hs
   Build-depends:       base >= 4, bytestring, cmdargs, containers
-  Other-modules:       Paths_mgrep
